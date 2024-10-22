@@ -14,7 +14,7 @@
         QRCode.toCanvas(document.getElementById('qrCode'), sessionId, function (error) {
             if (error) console.error(error);
         });
-        const ws = new WebSocket('ws://localhost:3001');
+        const ws = new WebSocket('ws://138.68.129.50:4001');
         ws.onopen = () => console.log("WebSocket connected");
     </script>
 </body>
