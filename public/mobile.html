@@ -13,22 +13,41 @@
 
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
-        window.addEventListener('load', function() {
+        window.addEventListener('load', async function() {
             const codeReader = new ZXing.BrowserQRCodeReader();
             const videoElement = document.getElementById('video');
             const resultElement = document.getElementById('result');
 
-            // Start the video stream and scan for QR codes
-            codeReader.getVideoInputDevices().then(videoInputDevices => {
-                const firstDeviceId = videoInputDevices[0].deviceId;
-                codeReader.decodeOnceFromVideoDevice(firstDeviceId, 'video').then(result => {
+            try {
+                // Get all available video devices (cameras)
+                const videoInputDevices = await codeReader.getVideoInputDevices();
+                
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera devices found.');
+                }
+
+                // Select the first available device or allow the user to choose
+                const selectedDeviceId = videoInputDevices.length > 1 ? videoInputDevices[1].deviceId : videoInputDevices[0].deviceId;
+
+                // Start the video stream from the selected device
+                await codeReader.decodeOnceFromVideoDevice(selectedDeviceId, 'video').then(result => {
                     resultElement.textContent = `QR Code detected: ${result.text}`;
                     console.log(result.text); // Process the scanned QR code here
+
+                    // Assuming the QR code contains the session ID or relevant information.
+                    const sessionId = result.text; // Use the QR code text as the session ID
+
+                    // Redirect to the web application with the session ID
+                    window.location.href = `https://ayozat.com?sessionId=${encodeURIComponent(sessionId)}`;
+                    
                 }).catch(err => {
-                    console.error(err);
-                    resultElement.textContent = 'No QR code detected or camera permission denied';
+                    console.error('QR Code scan failed:', err);
+                    resultElement.textContent = 'Failed to scan QR code or camera permission denied.';
                 });
-            }).catch(err => console.error('Error accessing video devices: ', err));
+            } catch (err) {
+                console.error('Error accessing video devices: ', err);
+                resultElement.textContent = 'No QR code detected or camera permission denied';
+            }
         });
     </script>
 </body>

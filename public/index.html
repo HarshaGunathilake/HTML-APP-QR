@@ -3,19 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Connection</title>
+    <title>QR Code Login</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 <body>
-    <h1>Scan to Connect</h1>
+    <h1>Login with QR Code</h1>
+
+    <!-- Email and Password Input Fields -->
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Enter your email" required />
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <button type="submit">Generate QR Code</button>
+    </form>
+
     <canvas id="qrCode"></canvas>
+
     <script>
-        const sessionId = Math.random().toString(36).substring(2);
-        QRCode.toCanvas(document.getElementById('qrCode'), sessionId, function (error) {
-            if (error) console.error(error);
+        const form = document.getElementById('loginForm');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const userData = `${email}:${password}`; // Combine email and password
+
+            // Generate QR Code with email and password
+            QRCode.toCanvas(document.getElementById('qrCode'), userData, function (error) {
+                if (error) console.error(error);
+            });
+
+            const ws = new WebSocket('ws://http://localhost:3000'); // Update your WebSocket address
+            ws.onopen = () => {
+                console.log("WebSocket connected");
+                ws.send(userData); // Send email and password to server
+            };
+
+            ws.onmessage = (message) => {
+                console.log('Message from server:', message.data);
+                if (message.data === 'authenticated') {
+                    alert('You are authenticated!');
+                    window.location.href = '/dashboard'; // Redirect after authentication
+                }
+            };
         });
-        const ws = new WebSocket('ws://138.68.129.50:4001');
-        ws.onopen = () => console.log("WebSocket connected");
     </script>
 </body>
 </html>
